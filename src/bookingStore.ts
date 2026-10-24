@@ -16,7 +16,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function isBooking(value: unknown): value is Booking {
   if (!isRecord(value)) return false;
   const { id, name, roomId, date, startMinute, endMinute } = value;
-  return typeof id === 'string' && id.length > 0 && typeof name === 'string' && name.trim().length > 0 &&
+  return typeof id === 'string' && id.trim().length > 0 && typeof name === 'string' && name.trim().length > 0 &&
     typeof roomId === 'string' && ROOMS.some((room) => room.id === roomId) &&
     typeof date === 'string' && isValidLocalDate(date) &&
     typeof startMinute === 'number' && typeof endMinute === 'number' &&
@@ -63,15 +63,18 @@ export function createBookingStore(
       if (current.error) return current;
       const result = validateBooking(request, current.bookings, now);
       if (!result.ok) return { bookings: current.bookings, error: result.message };
-      const generatedId = makeId();
-      let id = generatedId;
-      let suffix = 2;
-      while (current.bookings.some((booking) => booking.id === id)) {
-        id = `${generatedId}-${suffix++}`;
-      }
-      const booking: Booking = { ...result.value, id };
-      const bookings = [...current.bookings, booking];
       try {
+        const generatedId = makeId();
+        if (typeof generatedId !== 'string' || !generatedId.trim()) {
+          return { bookings: current.bookings, error: 'Booking could not be saved. Please try again.' };
+        }
+        let id = generatedId;
+        let suffix = 2;
+        while (current.bookings.some((booking) => booking.id === id)) {
+          id = `${generatedId}-${suffix++}`;
+        }
+        const booking: Booking = { ...result.value, id };
+        const bookings = [...current.bookings, booking];
         storage.setItem(BOOKING_STORAGE_KEY, JSON.stringify({ version: 1, bookings }));
         return { bookings };
       } catch {

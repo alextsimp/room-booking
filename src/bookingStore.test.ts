@@ -47,12 +47,26 @@ describe('booking store', () => {
   });
 
   it('preserves malformed and unsupported data without writing over it', () => {
-    for (const raw of ['{', JSON.stringify({ version: 2, bookings: [] })]) {
+    for (const raw of [
+      '{',
+      JSON.stringify({ version: 2, bookings: [] }),
+      JSON.stringify({ version: 1, bookings: [{ id: 'bad', name: 'Ada', roomId: 'missing', date: '2026-10-25', startMinute: 540, endMinute: 600 }] }),
+    ]) {
       localStorage.setItem(BOOKING_STORAGE_KEY, raw);
       const store = createBookingStore(localStorage);
       expect(store.load().error).toMatch(/could not be read/);
       expect(store.create(request, now).error).toMatch(/could not be read/);
       expect(localStorage.getItem(BOOKING_STORAGE_KEY)).toBe(raw);
     }
+  });
+
+  it('keeps storage unchanged when ID generation fails', () => {
+    const empty = createBookingStore(localStorage, () => '');
+    expect(empty.create(request, now).error).toMatch(/could not be saved/);
+    expect(localStorage.getItem(BOOKING_STORAGE_KEY)).toBeNull();
+
+    const throwing = createBookingStore(localStorage, () => { throw new Error('random unavailable'); });
+    expect(throwing.create(request, now).error).toMatch(/could not be saved/);
+    expect(localStorage.getItem(BOOKING_STORAGE_KEY)).toBeNull();
   });
 });

@@ -16,14 +16,15 @@ export const CLOSE_MINUTE = 20 * 60;
 export const SLOT_MINUTES = 30;
 
 export function localDateKey(date: Date): string {
-  const year = date.getFullYear();
+  const year = String(date.getFullYear()).padStart(4, '0');
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
 export function currentWeekDates(today: Date): Date[] {
-  const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const monday = new Date(today);
+  monday.setHours(0, 0, 0, 0);
   monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
   return Array.from({ length: 7 }, (_, index) => {
     const date = new Date(monday);

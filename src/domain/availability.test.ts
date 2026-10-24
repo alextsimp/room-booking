@@ -46,4 +46,10 @@ describe('availability', () => {
       '2026-10-30', '2026-10-31', '2026-11-01',
     ]);
   });
+
+  it('pads early years in local date keys', () => {
+    const date = new Date(0);
+    date.setFullYear(99, 11, 31);
+    expect(localDateKey(date)).toBe('0099-12-31');
+  });
 });

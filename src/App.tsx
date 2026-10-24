@@ -4,16 +4,16 @@ import {
   formatMinute,
   getAvailability,
   localDateKey,
-  type BookingInterval,
 } from './domain/availability';
 import { ROOMS } from './domain/rooms';
 import { createBookingStore, type BookingStore } from './bookingStore';
 
 interface AppProps {
-  bookings?: readonly BookingInterval[];
   today?: Date;
   bookingStore?: BookingStore;
 }
+
+const STORAGE_UNAVAILABLE = 'Saved bookings could not be read. Availability is unavailable on this device.';
 
 function minuteFromTime(value: string): number {
   if (!/^\d{2}:\d{2}$/.test(value)) return Number.NaN;
@@ -21,12 +21,23 @@ function minuteFromTime(value: string): number {
   return (hours ?? Number.NaN) * 60 + (minutes ?? Number.NaN);
 }
 
-export function App({ bookings, today, bookingStore }: AppProps) {
+export function App({ today, bookingStore }: AppProps) {
   const [view, setView] = useState<'today' | 'week'>('today');
   const [clock, setClock] = useState(() => new Date());
-  const [store] = useState(() => bookingStore ?? createBookingStore(window.localStorage));
-  const [initial] = useState<{ bookings: readonly BookingInterval[]; error?: string }>(() => bookings ? { bookings } : store.load());
-  const [savedBookings, setSavedBookings] = useState<readonly BookingInterval[]>(initial.bookings);
+  const [store] = useState<BookingStore>(() => {
+    if (bookingStore) return bookingStore;
+    try {
+      return createBookingStore(window.localStorage);
+    } catch {
+      return {
+        load: () => ({ bookings: [], error: STORAGE_UNAVAILABLE }),
+        create: () => ({ bookings: [], error: STORAGE_UNAVAILABLE }),
+      };
+    }
+  });
+  const [initial] = useState(() => store.load());
+  const [savedBookings, setSavedBookings] = useState(initial.bookings);
+  const [availabilityError, setAvailabilityError] = useState(initial.error);
   const [feedback, setFeedback] = useState(initial.error ?? '');
   const [roomId, setRoomId] = useState('small');
   const [date, setDate] = useState(() => localDateKey(today ?? new Date()));
@@ -70,9 +81,12 @@ export function App({ bookings, today, bookingStore }: AppProps) {
     }, today ?? new Date());
     if (result.error) {
       setFeedback(result.error);
+      const current = store.load();
+      if (current.error) setAvailabilityError(current.error);
       return;
     }
     setSavedBookings(result.bookings);
+    setAvailabilityError(undefined);
     setFeedback('Booking saved.');
   }
 
@@ -95,7 +109,7 @@ export function App({ bookings, today, bookingStore }: AppProps) {
           <label>Start<input type="time" step="1800" value={start} onChange={(event) => setStart(event.target.value)} /></label>
           <label>End<input type="time" step="1800" value={end} onChange={(event) => setEnd(event.target.value)} /></label>
           <label>Name<input type="text" value={name} onChange={(event) => setName(event.target.value)} /></label>
-          <button type="submit">Book room</button>
+          <button type="submit" disabled={Boolean(availabilityError)}>Book room</button>
         </form>
         {feedback && <p className="booking-feedback" role="status">{feedback}</p>}
       </section>
@@ -109,7 +123,9 @@ export function App({ bookings, today, bookingStore }: AppProps) {
         </button>
       </div>
 
-      <div className="days">
+      {availabilityError ? (
+        <p className="availability-error" role="alert">Availability is unavailable until saved booking data can be read.</p>
+      ) : <div className="days">
         {dates.map((date) => {
           const dateKey = localDateKey(date);
           return (
@@ -140,7 +156,7 @@ export function App({ bookings, today, bookingStore }: AppProps) {
             </section>
           );
         })}
-      </div>
+      </div>}
     </main>
   );
 }

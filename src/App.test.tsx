@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
 import { createBookingStore } from './bookingStore';
 
@@ -30,10 +30,12 @@ describe('App', () => {
   });
 
   it('shows a saved booking only in its own room and time', () => {
+    const store = createBookingStore(localStorage, () => 'existing');
+    store.create({ roomId: 'small', date: '2026-10-24', startMinute: 480, endMinute: 510, name: 'Ada' }, new Date(2026, 9, 24, 7));
     render(
       <App
         today={new Date(2026, 9, 24)}
-        bookings={[{ roomId: 'small', date: '2026-10-24', startMinute: 480, endMinute: 510 }]}
+        bookingStore={store}
       />,
     );
     const small = screen.getByRole('region', { name: 'Small room' });
@@ -109,5 +111,34 @@ describe('App', () => {
     view.unmount();
     render(<App today={today} />);
     expect(within(screen.getByRole('region', { name: 'Small room' })).getByLabelText('09:00 to 09:30, booked')).toBeDefined();
+  });
+
+  it('does not display unknown availability as free when saved data is unreadable', () => {
+    localStorage.setItem('room-bookings', '{');
+    render(<App today={new Date(2026, 9, 24, 8)} />);
+    expect(screen.getByRole('alert').textContent).toMatch(/availability is unavailable/i);
+    expect(screen.queryByLabelText('09:00 to 09:30, free')).toBeNull();
+    expect((screen.getByRole('button', { name: 'Book room' }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('shows a storage error if browser access to localStorage is blocked', () => {
+    const getter = vi.spyOn(window, 'localStorage', 'get').mockImplementation(() => { throw new Error('blocked'); });
+    try {
+      render(<App today={new Date(2026, 9, 24, 8)} />);
+      expect(screen.getByRole('alert').textContent).toMatch(/availability is unavailable/i);
+    } finally {
+      getter.mockRestore();
+    }
+  });
+
+  it('shows a failed-write message without changing availability', () => {
+    const storage = {
+      getItem: () => null,
+      setItem: () => { throw new Error('quota exceeded'); },
+    };
+    render(<App today={new Date(2026, 9, 24, 8)} bookingStore={createBookingStore(storage, () => 'booking-1')} />);
+    fillBooking('Ada');
+    expect(screen.getByRole('status').textContent).toMatch(/could not be saved/i);
+    expect(within(screen.getByRole('region', { name: 'Small room' })).getByLabelText('09:00 to 09:30, free')).toBeDefined();
   });
 });
