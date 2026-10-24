@@ -21,7 +21,7 @@ export function isValidLocalDate(value: string): boolean {
 
 export function validateBooking(
   request: BookingRequest,
-  existing: readonly BookingInterval[],
+  existing: readonly BookingRequest[],
   now: Date,
 ): BookingValidation {
   const name = request.name.trim();
@@ -48,6 +48,14 @@ export function validateBooking(
   if (existing.some((booking) => booking.roomId === request.roomId && booking.date === request.date &&
     booking.startMinute < endMinute && booking.endMinute > startMinute)) {
     return { ok: false, message: 'This room is already booked at that time.' };
+  }
+  const memberName = name.toLowerCase();
+  const bookedMinutes = existing
+    .filter((booking) => booking.roomId === request.roomId && booking.date === request.date &&
+      booking.name.trim().toLowerCase() === memberName)
+    .reduce((minutes, booking) => minutes + booking.endMinute - booking.startMinute, 0);
+  if (bookedMinutes + endMinute - startMinute > 120) {
+    return { ok: false, message: 'You can book up to 2 hours per room per day.' };
   }
   return { ok: true, value: { ...request, name } };
 }

@@ -38,6 +38,31 @@ describe('booking store', () => {
     expect(store.create({ ...request, roomId: 'medium' }, now).bookings).toHaveLength(3);
   });
 
+  it('enforces the daily room allowance across consecutive creates without saving a rejected request', () => {
+    let next = 0;
+    const store = createBookingStore(localStorage, () => `booking-${++next}`);
+    expect(store.create(request, now).bookings).toHaveLength(1);
+    expect(store.create({ ...request, name: ' aDA ', startMinute: 600, endMinute: 660 }, now).bookings).toHaveLength(2);
+    const saved = localStorage.getItem(BOOKING_STORAGE_KEY);
+    expect(store.create({ ...request, startMinute: 660, endMinute: 690 }, now).error)
+      .toMatch(/2 hours per room per day/);
+    expect(localStorage.getItem(BOOKING_STORAGE_KEY)).toBe(saved);
+    expect(store.create({ ...request, roomId: 'large', startMinute: 660, endMinute: 690 }, now).bookings)
+      .toHaveLength(3);
+  });
+
+  it('counts bookings from an existing version-1 collection without changing it on rejection', () => {
+    const saved = JSON.stringify({ version: 1, bookings: [
+      { ...request, name: ' ADA ', startMinute: 540, endMinute: 660, id: 'earlier' },
+    ] });
+    localStorage.setItem(BOOKING_STORAGE_KEY, saved);
+    const store = createBookingStore(localStorage, () => 'new');
+    expect(store.load().bookings).toHaveLength(1);
+    expect(store.create({ ...request, startMinute: 660, endMinute: 690 }, now).error)
+      .toMatch(/2 hours per room per day/);
+    expect(localStorage.getItem(BOOKING_STORAGE_KEY)).toBe(saved);
+  });
+
   it('chooses a unique ID when the generator repeats an existing one', () => {
     const store = createBookingStore(localStorage, () => 'same-id');
     expect(store.create(request, now).bookings[0]?.id).toBe('same-id');

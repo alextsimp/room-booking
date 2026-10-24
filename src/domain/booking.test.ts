@@ -48,4 +48,32 @@ describe('validateBooking', () => {
     expect(check({ roomId: 'medium' }, existing).ok).toBe(true);
     expect(check({ date: '2026-10-26' }, existing).ok).toBe(true);
   });
+
+  it('allows bookings that bring a member to exactly 2 hours in one room and day', () => {
+    const existing = [{ ...valid, name: 'Ada', startMinute: 540, endMinute: 600 }];
+    expect(check({ startMinute: 600, endMinute: 660 }, existing).ok).toBe(true);
+  });
+
+  it('rejects an over-limit booking using the total of nonoverlapping bookings', () => {
+    const existing = [
+      { ...valid, name: 'Ada', startMinute: 540, endMinute: 600 },
+      { ...valid, name: 'Ada', startMinute: 600, endMinute: 630 },
+    ];
+    const result = check({ startMinute: 630, endMinute: 690 }, existing);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.message).toMatch(/2 hours per room per day/);
+  });
+
+  it('counts trimmed names without regard to letter case', () => {
+    const existing = [{ ...valid, name: '  aDA  ', startMinute: 540, endMinute: 660 }];
+    expect(check({ name: ' ada ', startMinute: 660, endMinute: 690 }, existing).ok).toBe(false);
+  });
+
+  it('keeps allowances separate by room, date, and member', () => {
+    const existing = [{ ...valid, name: 'Ada', startMinute: 540, endMinute: 660 }];
+    const later = { startMinute: 660, endMinute: 690 };
+    expect(check({ ...later, roomId: 'large' }, existing).ok).toBe(true);
+    expect(check({ ...later, date: '2026-10-26' }, existing).ok).toBe(true);
+    expect(check({ ...later, name: 'Bea' }, existing).ok).toBe(true);
+  });
 });
