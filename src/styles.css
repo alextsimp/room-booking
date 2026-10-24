@@ -12,6 +12,14 @@ body { margin: 0; }
 .page-header p { margin: 0.4rem 0; }
 .eyebrow { color: #24634d; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.8rem; }
 .scope-note { color: #52635a; font-size: 0.9rem; }
+.booking-panel { margin-bottom: 1.5rem; padding: 1rem; border: 1px solid #d8e2d9; border-radius: 0.8rem; background: white; }
+.booking-title { margin: 0 0 0.8rem; font-size: 1.3rem; font-weight: 700; }
+.booking-panel form { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); gap: 0.75rem; align-items: end; }
+.booking-panel label { display: grid; min-width: 0; gap: 0.3rem; font-weight: 600; }
+.booking-panel input, .booking-panel select, .booking-panel button { width: 100%; min-width: 0; min-height: 2.7rem; padding: 0.5rem; border: 1px solid #b7c8bb; border-radius: 0.45rem; background: white; color: inherit; font: inherit; }
+.booking-panel button { background: #24634d; color: white; cursor: pointer; font-weight: 700; }
+.booking-panel :is(input, select, button):focus-visible { outline: 3px solid #e5a638; outline-offset: 2px; }
+.booking-feedback { overflow-wrap: anywhere; margin: 0.8rem 0 0; color: #873626; }
 .view-switch { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
 .view-switch button { border: 1px solid #b7c8bb; border-radius: 0.55rem; padding: 0.65rem 1rem; background: white; color: inherit; font: inherit; cursor: pointer; }
 .view-switch button[aria-pressed='true'] { color: white; background: #24634d; border-color: #24634d; }
