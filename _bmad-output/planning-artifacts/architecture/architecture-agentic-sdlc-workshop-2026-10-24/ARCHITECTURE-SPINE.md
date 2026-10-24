@@ -12,7 +12,8 @@ binds: []
 sources:
   - docs/idea.md
   - AGENTS.md
-companions: []
+companions:
+  - _bmad-output/planning-artifacts/epics.md
 ---
 
 # Architecture Spine — Meeting-room booking prototype
@@ -88,7 +89,6 @@ The storage adapter can sit in `src/` outside `domain/` so browser APIs do not e
 ## Deferred
 
 - **[ASSUMPTION] Fixed room inventory:** Keep the three rooms in source data and persist bookings only. Revisit if room management enters scope.
-- **Maximum booking duration:** The idea says members should not occupy a room all day, but gives no limit. Define the limit before implementing booking validation.
 - **Cancellation and ownership:** Name-only entry provides no identity assurance. Decide who may cancel or edit a booking before building those flows.
 - **Recurring bookings and room displays:** Future ideas; decide their contracts when scoped.
 - **Shared availability across devices:** Requires a different data authority and a change to the client-only constraint; revisit only if prototype scope changes.
