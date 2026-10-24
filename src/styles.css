@@ -1,22 +1,33 @@
 :root {
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  line-height: 1.5;
-  color: #1a1a1a;
-  background: #fafafa;
+  color: #17251f;
+  background: #f5f7f4;
 }
 
-body {
-  margin: 0;
-}
-
-.app {
-  max-width: 48rem;
-  margin: 0 auto;
-  padding: 2rem 1rem;
-}
-
-code {
-  background: #eee;
-  padding: 0.1em 0.3em;
-  border-radius: 3px;
+* { box-sizing: border-box; }
+body { margin: 0; }
+.app { max-width: 76rem; margin: 0 auto; padding: 2rem 1rem 4rem; }
+.page-header { margin-bottom: 1.5rem; }
+.page-header h1 { margin: 0.2rem 0; font-size: clamp(2rem, 5vw, 3rem); }
+.page-header p { margin: 0.4rem 0; }
+.eyebrow { color: #24634d; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.8rem; }
+.scope-note { color: #52635a; font-size: 0.9rem; }
+.view-switch { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+.view-switch button { border: 1px solid #b7c8bb; border-radius: 0.55rem; padding: 0.65rem 1rem; background: white; color: inherit; font: inherit; cursor: pointer; }
+.view-switch button[aria-pressed='true'] { color: white; background: #24634d; border-color: #24634d; }
+.view-switch button:focus-visible { outline: 3px solid #e5a638; outline-offset: 2px; }
+.day { margin: 0 0 2.5rem; }
+.day h2 { margin-bottom: 0.8rem; font-size: 1.4rem; }
+.rooms { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.room { min-width: 0; padding: 1rem; border: 1px solid #d8e2d9; border-radius: 0.8rem; background: white; }
+.room-heading h3 { margin: 0; font-size: 1.1rem; }
+.room-heading p { margin: 0.3rem 0 0.9rem; color: #52635a; }
+.slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(5.7rem, 1fr)); gap: 0.35rem; list-style: none; margin: 0; padding: 0; }
+.slot { min-width: 0; display: flex; flex-direction: column; gap: 0.1rem; padding: 0.35rem 0.45rem; border-radius: 0.35rem; font-size: 0.85rem; }
+.slot.free { background: #e4f4e9; color: #174e2d; }
+.slot.occupied { background: #f4e8e4; color: #873626; }
+.slot-status { font-size: 0.72rem; }
+@media (max-width: 760px) {
+  .rooms { grid-template-columns: 1fr; }
+  .app { padding: 1.2rem 0.8rem 3rem; }
 }
